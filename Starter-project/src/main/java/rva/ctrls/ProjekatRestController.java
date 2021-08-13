@@ -1,100 +1,89 @@
 package rva.ctrls;
 
 import java.util.Collection;
-
-import javax.transaction.Transactional;
-
+import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import rva.jpa.Projekat;
-import rva.jpa.Projekat;
 import rva.repository.ProjekatRepository;
 
-@Api(tags = {"Projekat CRUD operacije"})
 @CrossOrigin
 @RestController
+@Api(tags = {"Projekat CRUD operacije"})
 public class ProjekatRestController {
 
 	@Autowired
-	private JdbcTemplate jdbcTemplate;
-	
+	public ProjekatRepository projekatRepository;
+
 	@Autowired
-	private ProjekatRepository projekatRepository;
-	
+	private JdbcTemplate jdbcTemplate;
+
+	@ApiOperation(value="Vraća kolekciju projekata")
 	@GetMapping("projekat")
-	@ApiOperation(value = "Vraća kolekciju svih projekata iz baze podataka")
-	public Collection<Projekat> getProjekats() { 
+	public Collection<Projekat> getProjekti() {
+
+		
 		return projekatRepository.findAll();
 	}
-	
+
+	@ApiOperation(value="Vraća projekat na osnovu prosleđenog id-ja")
 	@GetMapping("projekat/{id}")
-	@ApiOperation(value = "Vraća jedan projekat iz baze podataka po id-u")
-	public Projekat getProjekat(@PathVariable("id") Integer id) { 
+	public Projekat getProjekat(@PathVariable("id") Integer id) {
+
 		return projekatRepository.getOne(id);
 	}
-	
+	@ApiOperation(value="Vraća kolekciju projekata na osnovu prosleđenog naziva")
 	@GetMapping("projekatNaziv/{naziv}")
-	@ApiOperation(value = "Vraća jedan projekat iz baze podataka po vrednosti naziva")
-	public Collection<Projekat> getProjekatByNaziv(@PathVariable("naziv") String naziv)
-	{
+	public Collection<Projekat> getProjektiByNaziv(@PathVariable("naziv") String naziv) {
+
 		return projekatRepository.findByNazivContainingIgnoreCase(naziv);
+
 	}
-	
+
+	@ApiOperation(value="Dodavanje podataka o novom projektu")
 	@PostMapping("projekat")
-	@ApiOperation(value = "Dodaje jedan novi projekat u bazu podataka")
-	public ResponseEntity<Projekat> insertProjekat(@RequestBody Projekat projekat)
-	{
-		if(!projekatRepository.existsById(projekat.getId()))
-		{
+	public ResponseEntity<Projekat> insertProjekat(@RequestBody Projekat projekat) {
+
+		if (!projekatRepository.existsById(projekat.getId())) {
 			projekatRepository.save(projekat);
 			return new ResponseEntity<Projekat>(HttpStatus.OK);
 		}
-		
+
 		return new ResponseEntity<Projekat>(HttpStatus.CONFLICT);
 	}
-	
-	@PutMapping("projekat/{id}")
-	@ApiOperation(value = "Modifikuje jedan projekat iz baze podataka po id-u")
-	public ResponseEntity<Projekat> updateProjekat(@RequestBody Projekat projekat)
-	{
-		if(projekatRepository.existsById(projekat.getId()))
-		{
-			projekatRepository.save(projekat);
-			return new ResponseEntity<Projekat>(HttpStatus.OK);
-		}
-		return new ResponseEntity<Projekat>(HttpStatus.NO_CONTENT);
+
+	@ApiOperation(value="Izmena podataka o projektu")
+	@PutMapping("projekat")
+	public ResponseEntity<Projekat> updateProjekat(@RequestBody Projekat projekat) {
+
+		if (!projekatRepository.existsById(projekat.getId()))
+			return new ResponseEntity<Projekat>(HttpStatus.CONFLICT);
+
+		projekatRepository.save(projekat);
+		return new ResponseEntity<Projekat>(HttpStatus.OK);
+
 	}
 	
-	@Transactional
+	@ApiOperation(value="Brisanje projekta na osnovu prosleđenog id-ja")
 	@DeleteMapping("projekat/{id}")
-	@ApiOperation(value = "Brise jedan projekat iz baze podataka po id-u")
-	public ResponseEntity<Projekat> deleteProjekat(@PathVariable("id") Integer id)
-	{
-		if(!projekatRepository.existsById(id))
-		{	
+	public ResponseEntity<Projekat> deleteProjekat(@PathVariable("id") Integer id) {
+
+		if (!projekatRepository.existsById(id)) {
+
 			return new ResponseEntity<Projekat>(HttpStatus.NO_CONTENT);
 		}
-		jdbcTemplate.execute("delete from student where projekat= "+id);
+
 		projekatRepository.deleteById(id);
-		if(id == -100)
-		{
-			jdbcTemplate.execute("INSERT INTO \"projekat\"(\"id\",\"naziv\",\"oznaka\",\"opis\")\r\n"
-					+ "VALUES (-100,'TestNaz','TestOzn','TestOpis');");
+
+		if (id == -100) {
+			jdbcTemplate.execute("INSERT INTO \"projekat\" (\"id\", \"naziv\", \"oznaka\", \"opis\") "
+					+ "VALUES(-100, 'test', 'test','test')");
 		}
 		return new ResponseEntity<Projekat>(HttpStatus.OK);
 	}
-	
+
 }

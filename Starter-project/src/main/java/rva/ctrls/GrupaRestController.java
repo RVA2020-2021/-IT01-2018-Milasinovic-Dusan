@@ -2,7 +2,6 @@ package rva.ctrls;
 
 import java.util.Collection;
 
-import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,82 +21,81 @@ import io.swagger.annotations.ApiOperation;
 import rva.jpa.Grupa;
 import rva.repository.GrupaRepository;
 
-@Api(tags = {"Grupa CRUD operacije"})
 @CrossOrigin
 @RestController
+@Api(tags = {"Grupa CRUD operacije"})
+
 public class GrupaRestController {
+ 
+	@Autowired
+	private GrupaRepository grupaRepository;
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
-	
-	@Autowired
-	private GrupaRepository grupaRepository;
-	
-	
+
+	@ApiOperation(value="Vraća kolekciju svih grupa iz baze podataka")
 	@GetMapping("grupa")
-	@ApiOperation(value = "Vraća kolekciju svih grupa iz baze podataka")
-	public Collection<Grupa> getGrupas() { 
+	public Collection<Grupa> getGrupe() {
+
 		return grupaRepository.findAll();
 	}
 	
+	@ApiOperation(value="Vraća grupu na osnovu prosleđenog id-ja")
 	@GetMapping("grupa/{id}")
-	@ApiOperation(value = "Vraća jednu grupu iz baze podataka po id-u")
-	public Grupa getGrupa(@PathVariable("id") Integer id) { 
+	public Grupa getGrupa(@PathVariable("id") Integer id) {
+
 		return grupaRepository.getOne(id);
 	}
-	
+
+	@ApiOperation(value="Vraća kolekciju grupa na osnovu oznake koja se prosledi")
 	@GetMapping("grupaOznaka/{oznaka}")
-	@ApiOperation(value = "Vraća jednu grupu iz baze podataka po vrednosti oznake")
-	public Collection<Grupa> getGrupaByOznaka(@PathVariable("oznaka") String oznaka)
-	{
+	public Collection<Grupa> getGrupaByNaziv(@PathVariable("oznaka") String oznaka) {
 		return grupaRepository.findByOznakaContainingIgnoreCase(oznaka);
 	}
-	
-	
-	@PostMapping("grupa")
-	@ApiOperation(value = "Dodaje jednu novu grupu u bazu podataka")
-	public ResponseEntity<Grupa> insertGrupa(@RequestBody Grupa grupa)
-	{
-		if(!grupaRepository.existsById(grupa.getId()))
-		{
+
+	@ApiOperation(value="Dodavanje nove grupe u bazu podataka")
+	@PostMapping("grupa") // p
+	public ResponseEntity<Grupa> insertGrupa(@RequestBody Grupa grupa) {
+
+		if (!grupaRepository.existsById(grupa.getId())) {
 			grupaRepository.save(grupa);
 			return new ResponseEntity<Grupa>(HttpStatus.OK);
 		}
-		
 		return new ResponseEntity<Grupa>(HttpStatus.CONFLICT);
+
 	}
-	
-	@PutMapping("grupa/{id}")
-	@ApiOperation(value = "Modifikuje jednu grupu iz baze podataka po id-u")
-	public ResponseEntity<Grupa> updateGrupa(@RequestBody Grupa grupa)
-	{
-		if(grupaRepository.existsById(grupa.getId()))
-		{
+
+	@ApiOperation(value="Izmena podataka o konkretnoj grupi")
+	@PutMapping("grupa")
+
+	public ResponseEntity<Grupa> updateGrupa(@RequestBody Grupa grupa) {
+
+		if (grupaRepository.existsById(grupa.getId())) {
 			grupaRepository.save(grupa);
 			return new ResponseEntity<Grupa>(HttpStatus.OK);
 		}
-		return new ResponseEntity<Grupa>(HttpStatus.NO_CONTENT);
+		return new ResponseEntity<Grupa>(HttpStatus.CONFLICT);
+
 	}
-	 
-	@Transactional
+	
+	@ApiOperation(value="Brisanje grupe na osnovu prosleđenog id-ja grupe koju korisnik želi da obriše")
 	@DeleteMapping("grupa/{id}")
-	@ApiOperation(value = "Brise jednu grupu iz baze podataka po id-u")
-	public ResponseEntity<Grupa> deleteGrupa(@PathVariable("id") Integer id)
-	{
-		if(!grupaRepository.existsById(id))
-		{	
+	public ResponseEntity<Grupa> deleteGrupa(@PathVariable("id") Integer id) {
+
+		if (!grupaRepository.existsById(id)) {
+
 			return new ResponseEntity<Grupa>(HttpStatus.NO_CONTENT);
 		}
-		jdbcTemplate.execute("delete from student where grupa= "+id);
+
 		grupaRepository.deleteById(id);
-		if(id == -100)
-		{
-			jdbcTemplate.execute("INSERT INTO \"grupa\"(\"id\", \"oznaka\", \"smer\")\r\n"
-					+ "VALUES (-100, 'TestOzn', 1);");
+
+		if (id == -100) {
+			jdbcTemplate.execute("INSERT INTO \"grupa\"(\"id\", \"oznaka\", \"smer\") " + "VALUES (-100, 'test', 1)");
 		}
+
 		return new ResponseEntity<Grupa>(HttpStatus.OK);
+
+		
 	}
-	
-	
-	
+
 }

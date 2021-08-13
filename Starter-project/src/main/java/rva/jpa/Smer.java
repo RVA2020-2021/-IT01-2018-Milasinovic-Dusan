@@ -2,7 +2,8 @@ package rva.jpa;
 
 import java.io.Serializable;
 import javax.persistence.*;
-
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -13,24 +14,23 @@ import java.util.List;
  * The persistent class for the smer database table.
  * 
  */
-@JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @NamedQuery(name="Smer.findAll", query="SELECT s FROM Smer s")
 public class Smer implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@SequenceGenerator(name="SMER_ID_GENERATOR", sequenceName="SMER_SEQ",allocationSize=1)
+	@SequenceGenerator(name="SMER_ID_GENERATOR", sequenceName="SMER_SEQ", allocationSize=1)
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="SMER_ID_GENERATOR")
 	private Integer id;
 
 	private String naziv;
 
 	private String oznaka;
-
-	//bi-directional many-to-one association to Grupa
 	@JsonIgnore
-	@OneToMany(mappedBy="smer")
+	//bi-directional many-to-one association to Grupa
+	@OneToMany(mappedBy="smer", cascade = {CascadeType.DETACH, CascadeType.REMOVE})
 	private List<Grupa> grupas;
 
 	public Smer() {

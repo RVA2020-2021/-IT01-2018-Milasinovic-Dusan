@@ -13,14 +13,14 @@ import java.util.List;
  * The persistent class for the projekat database table.
  * 
  */
-@JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @NamedQuery(name="Projekat.findAll", query="SELECT p FROM Projekat p")
 public class Projekat implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@SequenceGenerator(name="PROJEKAT_ID_GENERATOR", sequenceName="PROJEKAT_SEQ",allocationSize=1)
+	@SequenceGenerator(name="PROJEKAT_ID_GENERATOR", sequenceName="PROJEKAT_SEQ", allocationSize=1)
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="PROJEKAT_ID_GENERATOR")
 	private Integer id;
 
@@ -30,9 +30,9 @@ public class Projekat implements Serializable {
 
 	private String oznaka;
 
-	//bi-directional many-to-one association to Student
 	@JsonIgnore
-	@OneToMany(mappedBy="projekat")
+	//bi-directional many-to-one association to Student
+	@OneToMany(mappedBy="projekat", cascade = {CascadeType.DETACH, CascadeType.REMOVE})
 	private List<Student> students;
 
 	public Projekat() {

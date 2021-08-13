@@ -1,13 +1,10 @@
 package rva.ctrls;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 import javax.transaction.Transactional;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,96 +19,82 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import rva.jpa.Grupa;
 import rva.jpa.Smer;
-import rva.jpa.Smer;
-import rva.repository.GrupaRepository;
 import rva.repository.SmerRepository;
 
-@Api(tags = {"Smer CRUD operacije"})
-@CrossOrigin
+@CrossOrigin 
 @RestController
+@Api(tags = { "Smer CRUD operacije" })
 public class SmerRestController {
 	
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
-	
+
 	@Autowired
 	private SmerRepository smerRepository;
-	
+
 	@Autowired
-	private GrupaRepository grupaRepository;
+	private JdbcTemplate jdbcTemplate;
 
-
+	@ApiOperation(value = "Vraća kolekciju smerova iz baze podataka")
 	@GetMapping("smer")
-	@ApiOperation(value = "Vraća kolekciju svih smerova iz baze podataka")
-	public Collection<Smer> getSmers() { 
+	public Collection<Smer> getSmerovi() {
+
 		return smerRepository.findAll();
 	}
-	
+
+	@ApiOperation(value = "Vraća smer na osnovu prosleđenog id-ja")
 	@GetMapping("smer/{id}")
-	@ApiOperation(value = "Vraća jedan smer iz baze podataka po id-u")
-	public Smer getSmer(@PathVariable("id") Integer id) { 
+	public Smer getSmer(@PathVariable("id") Integer id) {
+
 		return smerRepository.getOne(id);
 	}
-	
+
+	@ApiOperation(value = "Vraća kolekciju smerova na osnovu prosleđenog naziva koji sadrže u nazivu taj string")
 	@GetMapping("smerNaziv/{naziv}")
-	@ApiOperation(value = "Vraća jedan smer iz baze podataka po vrednosti naziva")
-	public Collection<Smer> getSmerByNaziv(@PathVariable("naziv") String naziv)
-	{
+	public Collection<Smer> getSmerByNaziv(@PathVariable("naziv") String naziv) {
+
 		return smerRepository.findByNazivContainingIgnoreCase(naziv);
 	}
-	
+
+	@ApiOperation(value = "Dodavanje novog smera")
 	@PostMapping("smer")
-	@ApiOperation(value = "Dodaje jedan novi smer u bazu podataka")
-	public ResponseEntity<Smer> insertSmer(@RequestBody Smer Smer)
-	{
-		if(!smerRepository.existsById(Smer.getId()))
-		{
-			smerRepository.save(Smer);
+	public ResponseEntity<Smer> insertSmer(@RequestBody Smer smer) {
+
+		if (!smerRepository.existsById(smer.getId())) {
+
+			smerRepository.save(smer);
 			return new ResponseEntity<Smer>(HttpStatus.OK);
 		}
-		
+
 		return new ResponseEntity<Smer>(HttpStatus.CONFLICT);
 	}
-	
-	@PutMapping("smer/{id}")
-	@ApiOperation(value = "Modifikuje jedan smer iz baze podataka po id-u")
-	public ResponseEntity<Smer> updateSmer(@RequestBody Smer Smer)
-	{
-		if(smerRepository.existsById(Smer.getId()))
-		{
-			smerRepository.save(Smer);
-			return new ResponseEntity<Smer>(HttpStatus.OK);
-		}
-		return new ResponseEntity<Smer>(HttpStatus.NO_CONTENT);
+
+	@ApiOperation(value = "Izmena podataka o smeru")
+	@PutMapping("smer")
+	public ResponseEntity<Smer> updateSmer(@RequestBody Smer smer) {
+
+		if (!smerRepository.existsById(smer.getId()))
+			return new ResponseEntity<Smer>(HttpStatus.CONFLICT);
+
+		smerRepository.save(smer);
+		return new ResponseEntity<Smer>(HttpStatus.OK);
 	}
-	 
-	@Transactional
+
+	@ApiOperation(value = "Brisanje podataka o smeru")
+	//@Transactional
 	@DeleteMapping("smer/{id}")
-	@ApiOperation(value = "Brise jedan smer iz baze podataka po id-u")
-	public ResponseEntity<Smer> deleteSmer(@PathVariable("id") Integer id)
-	{
-		if(!smerRepository.existsById(id))
-		{	
+	public ResponseEntity<Smer> deleteSmer(@PathVariable("id") Integer id) {
+
+		if (!smerRepository.existsById(id))
 			return new ResponseEntity<Smer>(HttpStatus.NO_CONTENT);
-		}
-		Collection<Grupa> g=grupaRepository.findBySmer(smerRepository.getOne(id));
-		for(Grupa var:g)
-		{
-			jdbcTemplate.execute("delete from student where grupa= "+var.getId());
-		}
-		jdbcTemplate.execute("delete from grupa where smer= "+id);
-		
-		
+
+		jdbcTemplate.execute("DELETE FROM student WHERE grupa in (select id from grupa where smer=" + id+ ")");
+		jdbcTemplate.execute("DELETE FROM grupa WHERE smer=" + id);
 		smerRepository.deleteById(id);
-		if(id == -100)
-		{
-			jdbcTemplate.execute("INSERT INTO \"smer\"(\"id\", \"naziv\", \"oznaka\")\r\n"
-					+ "VALUES (-100, 'TestNaz', 'TestOzn');");
+		if (id == -100) {
+			jdbcTemplate
+					.execute("INSERT INTO \"smer\" (\"id\", \"naziv\", \"oznaka\") " + "VALUES (-100, 'Test', 'Test')");
 		}
 		return new ResponseEntity<Smer>(HttpStatus.OK);
 	}
-	
-	
+
 }
