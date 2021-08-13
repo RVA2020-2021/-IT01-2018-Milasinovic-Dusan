@@ -13,7 +13,7 @@ import java.util.List;
  * The persistent class for the grupa database table.
  * 
  */
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
 @Entity
 @NamedQuery(name="Grupa.findAll", query="SELECT g FROM Grupa g")
 public class Grupa implements Serializable {
@@ -31,10 +31,9 @@ public class Grupa implements Serializable {
 	@JoinColumn(name="smer")
 	private Smer smer;
 
-	
-	@JsonIgnore 
 	//bi-directional many-to-one association to Student
-	@OneToMany(mappedBy="grupa", cascade = {CascadeType.DETACH, CascadeType.REMOVE})
+	@JsonIgnore
+	@OneToMany(mappedBy="grupa")
 	private List<Student> students;
 
 	public Grupa() {
